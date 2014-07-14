@@ -1,4 +1,4 @@
-cocoonjslabs
-============
+jslabs
+======
 
-This is my personal lab space for playing around with cocoonsjs.
+This is my personal lab space for playing around with javascript.
