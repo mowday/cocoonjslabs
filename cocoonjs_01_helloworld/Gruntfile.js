@@ -2,6 +2,7 @@ module.exports = function(grunt) {
 
   // A list over all the files to be compiled
   var srcFiles = [
+    'src/startup.js'
   ];
 
 
@@ -23,6 +24,9 @@ module.exports = function(grunt) {
   // Project configuration.
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
+
+
+    clean: ["build"],
     
     uglify: {
       options: {
@@ -51,6 +55,17 @@ module.exports = function(grunt) {
     },
 
 
+    concat: {
+      dist: {
+        options: {
+          separator: '\n',
+        },
+        src: ['build/pixi.js', 'build/<%= pkg.name %>.min.js'],
+        dest: 'build/<%= pkg.name %>.dist.js'
+      }
+    },
+
+
     compress: {
       release: {
         options: {
@@ -58,7 +73,10 @@ module.exports = function(grunt) {
           mode: 'zip'
         },
         files: [
-          {src: ['**/*'], cwd: 'build/', expand: true}
+          {src: 
+            [
+              '<%= pkg.name %>.dist.js'
+            ], cwd: 'build/', expand: true}
         ]
       }
     }
@@ -70,12 +88,16 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-jshint');
   grunt.loadNpmTasks('grunt-contrib-copy');
   grunt.loadNpmTasks('grunt-contrib-compress');
+  grunt.loadNpmTasks('grunt-contrib-clean');
+  grunt.loadNpmTasks('grunt-contrib-concat');
 
   // Default task(s).
   grunt.registerTask('default', [
+    'clean',
     'uglify',
     'jshint:source',
     'copy:main',
+    'concat',
     'compress:release'
   ]);
 
