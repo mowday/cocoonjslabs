@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Frame Marshal 01</title>
+
+	<script type="text/javascript" src="https://rawgithub.com/GoodBoyDigital/pixi.js/master/bin/pixi.js" />
+	<script type="text/javascript">
+		Class = function() { };
+		Class.prototype.constructor = Class;
+
+
+		Class.constructor = function(target) 
+		{
+		    target.prototype.constructor = target;
+		    target.extends = Class.prototype.extends;
+		    return target;
+		}
+
+
+		Class.prototype.extends = function(baseClass)
+		{
+		    var target = this;
+		    var overridden = { };
+		    var constr = baseClass.prototype.constructor;
+
+		    var superObject = function() {
+		        return function() { constr.call(this, arguments); }
+		    }();
+
+		    if(baseClass.prototype.super)
+		        superObject.super = baseClass.prototype.super;
+
+		    var k;
+
+		    var validate = function(name, baseClass)
+		    {
+		        return name != "super" &&
+		            baseClass.prototype[name] !== undefined &&
+		            typeof baseClass.prototype[name] === "function";
+		    }
+
+		    for(k in baseClass.prototype)
+		    {
+		        if(validate(k, baseClass))
+		        {
+		            if(validate(k, target))
+		                overridden[k] = target.prototype[k];
+
+		            superObject[k] = function() {
+		                var f = baseClass.prototype[k];
+		                return function() {
+		                    f.call(this, arguments);
+		                }
+		            }();
+		        }
+		    }
+
+		    target.prototype = Object.create(baseClass.prototype);
+		    target.prototype.constructor = target;
+
+		    for(k in overridden)
+		        target[k] = overridden[k];
+
+		    target.prototype.super = superObject; 
+		}
+	</script>
+
+</head>
+<body onload="start()">
+	<script type="text/javascript">
+	function start()
+	{
+stage = new PIXI.Stage(0xFF00FF, true);
+renderer = new PIXI.CanvasRenderer(500, 500);
+document.body.appendChild(renderer.view);
+
+
+isAdding = false;
+var gravity = 0.75//1.5 ;
+
+var width = 500;
+var height = 500;
+
+var maxX = width;
+var minX = 0;
+var maxY = height;
+var minY = 0;
+
+    stage.touchstart=
+    stage.mousedown= function(){
+        isAdding = true;
+    }
+    
+    stage.touchend=
+    stage.mouseup = function(){
+        isAdding = false;
+    }
+
+
+
+var loader = new PIXI.AssetLoader([
+    "http://www.goodboydigital.com/pixijs/bunnymark/bunny.png"
+]);
+
+loader.onComplete = onAssetsLoaded
+loader.load();
+
+counter = document.createElement("div");
+counter.className = "counter";
+document.body.appendChild( counter);
+count = 0;
+
+bunnys = [];
+
+function onAssetsLoaded()
+{
+    wabbitTexture = new PIXI.Texture.fromImage("http://www.goodboydigital.com/pixijs/bunnymark/bunny.png")
+};
+
+function addBunny()
+{
+        var bunny = new PIXI.Sprite(wabbitTexture)//, {x:0, y:0, width:26, height:37});
+        
+        bunny.speedX = Math.random() * 2;
+        bunny.speedY = (Math.random() * 4) - 2;
+        bunnys.push(bunny);
+        
+        stage.addChild(bunny)//, random);
+        
+        count++;
+}
+
+function logic()
+{
+    if(isAdding === true)
+    {
+      for(var i = 0; i < 1; i++) addBunny();
+    }
+  
+  moveBunnies();
+};
+
+function moveBunnies()
+{
+  
+    for (var i = 0; i < bunnys.length; i++) 
+    {
+        var bunny = bunnys[i];
+        
+        bunny.position.x += bunny.speedX;
+        bunny.position.y += bunny.speedY;
+        //bunny.scale.x = 
+        bunny.speedY += gravity;
+    //  bunny.rotation += 0.1
+        if (bunny.position.x > maxX)
+        {
+            bunny.speedX *= -1;
+            bunny.position.x = maxX;
+        }
+        else if (bunny.position.x < minX)
+        {
+            bunny.speedX *= -1;
+            bunny.position.x = minX;
+        }
+        
+        if (bunny.position.y > maxY)
+        {
+            bunny.speedY *= -0.85;
+            bunny.position.y = maxY;
+            bunny.spin = (Math.random()-0.5) * 0.2
+            if (Math.random() > 0.5)
+            {
+                bunny.speedY -= Math.random() * 6;
+            }
+        } 
+        else if (bunny.position.y < minY)
+        {
+            bunny.speedY = 0;
+            bunny.position.y = minY;
+        }
+        
+    }
+};
+
+function render()
+{
+  renderer.render(stage);
+  counter.innerHTML = count + " BUNNIES";
+}
+
+
+
+
+
+//var marshal = new FrameMarshal(10, 5);
+//marshal.logicCallback = logic;
+//marshal.renderCallback =render;
+//marshal.start();
+}
+	</script>
+</body>
+</html>
